@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>
+			Music Sequencer App
+		</title>
+		
+		<script src="p5.js">
+		</script>
+		
+		<script src="p5.sound.min.js">
+		</script>
+		
+		<script src="sketch.js">
+		</script>
+	</head>
+
+	<script>
+		let isPlaying=false;
+		let bpm=80;
+		let cursorX=0;
+		let stepDuration;
+		let stepIndex=0;
+		let stepsPerBeat=4;
+		let rim, snare, hiHat, bass808;
+		let sounds=[];
+		let playedSteps=
+		[
+			Array(16).fill(false), // rim gia kathe step
+			Array(16).fill(false), // snare gia kathe step
+			Array(16).fill(false), // hihat gia kathe step
+			Array(16).fill(false)  // 808 gia kathe step
+		];
+		let colors= // xrwmata gia kathe hxo
+		[
+			[255, 150, 150], // rim kokkino
+			[150, 255, 150], // snare prasino
+			[150, 150, 255], // hihat mple
+			[255, 255, 150]  // 808 kitrino
+		];
+
+		// load hxwn
+		function preload()
+		{
+			rim=loadSound('rim.wav');
+			snare=loadSound('snare.wav');
+			hiHat=loadSound('hihat.wav');
+			bass808=loadSound('bass808.wav');
+			sounds=[rim, snare, hiHat, bass808];
+		}
+
+		function setup() 
+		{
+			createCanvas(1200, 600);
+			textAlign(CENTER, CENTER);
+			stepDuration=(60000/bpm)/stepsPerBeat; // diarkeia kathe step
+		}
+
+		function draw()
+		{
+			background(255, 165, 0); // xrwma canvas portokali
+
+			// emfanish player
+			fill(isPlaying ? 'green' : 'red');
+			text(isPlaying ? "Playing" : "Paused", width / 2, height - 40);
+
+			// spacing kai onomata
+			let spacing=(width-200)/16;
+			let rowHeight=80;
+			let soundLabels=["Rim", "Snare", "Hi-Hat", "808 Bass"];
+		  
+			for (let i=0; i<4; i++) // gia kathe hxo
+			{
+				for (let j=0; j<16; j++) // gia kathe step
+				{ 
+					if (j%4===0) // grammh kathe 4 steps
+					{
+						strokeWeight(2);
+						stroke(0);
+						line(j*spacing+100, 50, j*spacing+100, 50+rowHeight*4);
+					}
+					stroke(0);
+					strokeWeight(1);
+					if (playedSteps[i][j]) 
+					{
+						fill(colors[i][0], colors[i][1], colors[i][2]);
+					} 
+					else 
+					{
+						noFill();
+					}
+						
+					// deikths gia ta steps
+					rect(j*spacing+100+spacing/4, i*rowHeight+70, spacing/2, rowHeight/2);
+				}
+				fill(0);
+				noStroke();
+				text(soundLabels[i], 50, i*rowHeight+90);
+			}
+		
+			// smooth kinhsh grammhs-cursor
+			if (isPlaying) 
+			{
+				let elapsedTime=millis()-lastStepTime;
+				cursorX=(stepIndex+elapsedTime/stepDuration)*spacing;
+
+				// periorismos grammhs-cursor na mh fevgei apo thn othoni
+				if (cursorX>=width-spacing) 
+				{
+					cursorX=width-spacing;
+				}
+				if (elapsedTime>=stepDuration) 
+				{
+					stepIndex=(stepIndex+1)%16; // metakinhsh sto epomeno step
+					lastStepTime=millis();
+
+					// katharismos endeikshs gia to epomeno step
+					for (let i=0; i<4; i++) 
+					{
+						playedSteps[i][stepIndex]=false;
+					}
+				}		
+
+				// sxediash grammhs-cursor
+				stroke(255, 0, 0);
+				strokeWeight(2);
+				line(cursorX+100, 50, cursorX+100, 50+rowHeight*4);
+			}
+
+			// odhgies xrhsth
+			fill(0);
+			textSize(14);
+			text("Press SPACE to start/stop. Use arrow keys to play sounds.", width/2, height-20);
+		}
+
+		// start kai stop me spacebar
+		function keyPressed() 
+		{
+			if (key===' ') 
+			{
+				isPlaying=!isPlaying;
+				lastStepTime=millis(); // time reset
+				if (!isPlaying) 
+				{
+					stepIndex=0;
+					cursorX=0;
+				}
+			}
+
+			// hxoi sta velakia
+			if (isPlaying) 
+			{
+				if (keyCode===UP_ARROW) 
+				{
+					playSound(0); // paizei rim
+					playedSteps[0][stepIndex]=true; // katagrafei rim
+				} 
+				else if (keyCode===RIGHT_ARROW) 
+				{
+					playSound(1); // paizei snare
+					playedSteps[1][stepIndex]=true; // katagrafei snare
+				} 
+				else if (keyCode===DOWN_ARROW) 
+				{
+					playSound(2); // paizei hihat
+					playedSteps[2][stepIndex]=true; // katagrafei hihat
+				} 
+				else if (keyCode===LEFT_ARROW) 
+				{
+					playSound(3); // paizei 808
+					playedSteps[3][stepIndex]=true; // katagrafei 808
+				}
+			}
+		}
+
+		// player hxou
+		function playSound(index) 
+		{
+			if (sounds[index].isLoaded()) 
+			{
+				sounds[index].play();
+			}
+		}
+
+		function windowResized() 
+		{
+		  resizeCanvas(1200, 600);
+		}
+	</script>
+	
+	<body>
+	</body>
+</html>
